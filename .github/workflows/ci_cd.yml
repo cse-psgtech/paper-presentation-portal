@@ -1,0 +1,47 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ${{ github.repository }}/paper-presentation-portal
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        run: |
+          VERSION=0.1-${GITHUB_SHA::7}
+          docker build \
+            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            --build-arg VITE_API_BACKEND_URL=${{ secrets.VITE_API_BACKEND_URL }} \
+            -t $IMAGE_NAME:latest \
+            -t $IMAGE_NAME:$VERSION \
+            .
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Push
+        run: |
+          docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:$VERSION
+
+      - name: Notify Jenkins
+        run: |
+          curl --insecure "${{ secrets.JENKINS_WEBHOOK_URL }}"
