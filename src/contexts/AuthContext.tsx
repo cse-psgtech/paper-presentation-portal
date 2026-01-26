@@ -56,14 +56,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         withCredentials: true
       });
 
-      if (response.data.user) {
+      console.log("Response from The auth", response )
+
+      // Handle reviewer response
+      if (response.data.reviewer) {
         const userData: User = {
-          id: response.data.user.id || response.data.user.uniqueId,
-          email: response.data.user.email,
-          name: response.data.user.name,
-          role: response.data.user.role || role || 'user'
+          id: response.data.reviewer._id,
+          email: response.data.reviewer.email,
+          name: response.data.reviewer.reviewerName,
+          role: 'reviewer'
         };
         setUser(userData);
+        sessionStorage.setItem('userRole', 'reviewer');
+      }
+      // Handle user response
+      else if (response.data.user) {
+        const userData: User = {
+          id: response.data.user.uniqueId || response.data.user.id,
+          email: response.data.user.email,
+          name: response.data.user.name,
+          role: 'user'
+        };
+        setUser(userData);
+        sessionStorage.setItem('userRole', 'user');
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
@@ -74,7 +89,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await fetchProfile();
+        const storedRole = sessionStorage.getItem('userRole') as UserRole | null;
+        if (storedRole) {
+          await fetchProfile(storedRole);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -92,6 +110,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
+      sessionStorage.removeItem('userRole');
     }
   };
 

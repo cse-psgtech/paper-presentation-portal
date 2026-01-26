@@ -28,7 +28,7 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
         setMessages([]);
         
         const response = await axios.get(
-          `${API_BASE_URL}/api/events/paper/${user?.role}/messages/${selectedChatRoom._id}`
+          `${API_BASE_URL}/api/events/paper/${user?.role}/chats/messages/${selectedChatRoom._id}`
         );
         console.log(response);
         if (response.data.success) {
