@@ -38,8 +38,8 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
         }
       } catch (err) {
         const errorMessage = axios.isAxiosError(err)
-          ? err.response?.data?.message || err.message
-          : 'Failed to fetch messages';
+            ? err.response?.data?.message || err.message
+            : 'Failed to fetch messages';
         setError(errorMessage);
         console.error('Messages fetch error:', err);
       } finally {

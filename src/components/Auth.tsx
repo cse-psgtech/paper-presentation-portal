@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, UserCheck, User, Eye, EyeOff } from 'lucide-react';
 import { useAuth, type UserRole } from '../contexts/AuthContext';
 
@@ -11,6 +11,7 @@ const API_BACKEND_URL = import.meta.env.VITE_API_BACKEND_URL;
 
 export default function Auth() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { fetchProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +22,50 @@ export default function Auth() {
     password: '',
   });
 
+  // Handle Google OAuth callback: backend redirects to /auth?type=callback&email=...&googleId=...
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get('type');
+
+    if (type !== 'callback') return;
+
+    const email = params.get('email');
+    const googleId = params.get('googleId');
+    const callbackError = params.get('error');
+
+    if (callbackError) {
+      setError('Google sign-in failed. Please try again.');
+      return;
+    }
+
+    if (!email || !googleId) {
+      setError('Missing Google login data. Please try signing in again.');
+      return;
+    }
+
+    const completeGoogleLogin = async () => {
+      setLoading(true);
+      try {
+        await axios.post(
+          `${API_BACKEND_URL}/api/auth/user/ppp/login-google`,
+          { email, googleId }
+        );
+        await fetchProfile('user');
+        navigate('/author', { replace: true });
+      } catch (err) {
+        const errorMessage = axios.isAxiosError(err)
+          ? err.response?.data?.message || err.message
+          : 'Google login failed. Please try again.';
+        setError(errorMessage);
+        console.error('Google OAuth error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void completeGoogleLogin();
+  }, [location.search, fetchProfile, navigate]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -28,7 +73,7 @@ export default function Auth() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_BACKEND_URL}/api/auth/user/google`;
+    window.location.href = `${API_BACKEND_URL}/api/auth/user/ppp/google`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
