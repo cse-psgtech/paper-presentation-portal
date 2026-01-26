@@ -1,12 +1,21 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image to GHCR
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - master
+      - main
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - master
+      - main
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: ${{ github.repository }}/paper-presentation-portal
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -14,33 +23,52 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to GHCR
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build
-        run: |
-          VERSION=0.1-${GITHUB_SHA::7}
-          docker build \
-            --build-arg VITE_API_BACKEND_URL=${{ secrets.VITE_API_BACKEND_URL }} \
-            -t $IMAGE_NAME:latest \
-            -t $IMAGE_NAME:$VERSION \
-            .
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Push
-        run: |
-          docker push $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:$VERSION
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+          build-args: |
+            VITE_API_BACKEND_URL=${{ secrets.VITE_API_BACKEND_URL }}
 
-      - name: Notify Jenkins
+      - name: Call webhook after successful push
+        if: success()
         run: |
-          curl --insecure "${{ secrets.JENKINS_WEBHOOK_URL }}"
+          curl --insecure ${{ secrets.JENKINS_WEBHOOK_URL }}
