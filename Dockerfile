@@ -8,7 +8,7 @@ RUN npm ci
 
 COPY . .
 
-RUN printf "VITE_API_BACKEND_URL=%s\n" "$VITE_API_BACKEND_URL" > .env
+ENV VITE_API_BACKEND_URL=$VITE_API_BACKEND_URL
 
 RUN npm run build
 

@@ -1,5 +1,3 @@
-import React from 'react';
-
 type ChatLoaderProps = {
   label?: string;
   size?: number;

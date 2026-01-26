@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { LogOut, User as UserIcon, Mail, Phone, Building2, GraduationCap } from 'lucide-react';
+import { LogOut, Phone, Building2, GraduationCap } from 'lucide-react';
 import { useAuth, type UserRole } from '../contexts/AuthContext';
 
 axios.defaults.withCredentials = true;
