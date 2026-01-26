@@ -1,14 +1,16 @@
+import type { PropsWithChildren } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth, type UserRole } from '../../contexts/AuthContext';
+import { useAuthContext, type UserRole } from '../../contexts/AuthContext';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredRole?: UserRole;
-}
+type ProtectedRouteProps = PropsWithChildren & {
+  allowedRoles?: UserRole[];
+};
 
-export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { isAuthenticated, user, isLoading } = useAuth();
+export default function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
+  const { role, isAuthenticated, isLoading } = useAuthContext();
   const location = useLocation();
+
+  console.log('This is from protected Route:', role);
 
   if (isLoading) {
     return (
@@ -21,13 +23,12 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || role === null) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
-    // Redirect to appropriate dashboard based on user role
-    const redirectPath = user?.role === 'user' ? '/author' : '/reviewer';
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    const redirectPath = role === 'user' ? '/author' : '/reviewer';
     return <Navigate to={redirectPath} replace />;
   }
 

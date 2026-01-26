@@ -30,7 +30,6 @@ jobs:
         run: |
           VERSION=0.1-${GITHUB_SHA::7}
           docker build \
-            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
             --build-arg VITE_API_BACKEND_URL=${{ secrets.VITE_API_BACKEND_URL }} \
             -t $IMAGE_NAME:latest \
             -t $IMAGE_NAME:$VERSION \

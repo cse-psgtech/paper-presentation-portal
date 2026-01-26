@@ -1,7 +1,6 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-ARG VITE_API_URL
 ARG VITE_API_BACKEND_URL
 
 COPY package.json package-lock.json ./
@@ -9,8 +8,7 @@ RUN npm ci
 
 COPY . .
 
-# Inject build-time env for Vite
-RUN printf "VITE_API_URL=%s\nVITE_API_BACKEND_URL=%s\n" "$VITE_API_URL" "$VITE_API_BACKEND_URL" > .env
+RUN printf "VITE_API_BACKEND_URL=%s\n" "$VITE_API_BACKEND_URL" > .env
 
 RUN npm run build
 

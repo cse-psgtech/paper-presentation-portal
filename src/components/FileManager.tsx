@@ -7,7 +7,7 @@ import { type UserRole } from '../contexts/AuthContext';
 // Configure axios to send cookies with requests
 axios.defaults.withCredentials = true;
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5000';
 
 interface FileManagerProps {
   role: UserRole;

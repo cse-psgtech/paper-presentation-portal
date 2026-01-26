@@ -29,7 +29,7 @@ function AppContent() {
       <Route 
         path="/reviewer/*" 
         element={
-          <ProtectedRoute requiredRole="reviewer">
+          <ProtectedRoute allowedRoles={['reviewer']}>
             <ReviewerDashboard onLogout={logout} />
           </ProtectedRoute>
         } 
@@ -37,7 +37,7 @@ function AppContent() {
       <Route 
         path="/author/*" 
         element={
-          <ProtectedRoute requiredRole="user">
+          <ProtectedRoute allowedRoles={['user']}>
             <AuthorDashboard onLogout={logout} />
           </ProtectedRoute>
         } 

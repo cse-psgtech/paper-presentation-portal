@@ -1,22 +1,14 @@
 import { Home, Settings, LogOut, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface NavBarProps {
   onLogout: () => void;
 }
 
 export default function NavBar({ onLogout }: NavBarProps) {
-  const [userName, setUserName] = useState('Student');
-  const userEmail = 'student@uni.edu';
-
-  useEffect(() => {
-    // You can fetch user info from your auth service or pass it as props
-    const userId = localStorage.getItem('userId');
-    // Set user name from local storage or API call if available
-    if (userId) {
-      setUserName(userId);
-    }
-  }, []);
+  const { user } = useAuth();
+  const userName = user?.name || 'User';
+  const userEmail = user?.email || 'user@example.com';
 
   return (
     <nav className="h-full flex flex-col justify-between p-4 bg-gray-900 text-white">

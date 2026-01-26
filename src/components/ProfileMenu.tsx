@@ -91,8 +91,8 @@ export default function ProfileMenu({ role, onLogout }: ProfileMenuProps) {
       if (API_BACKEND_URL) {
         const endpoint =
           role === 'reviewer'
-            ? `${API_BACKEND_URL}/inf/api/auth/reviewer/logout`
-            : `${API_BACKEND_URL}/inf/api/auth/user/logout`;
+            ? `${API_BACKEND_URL}/api/auth/reviewer/logout`
+            : `${API_BACKEND_URL}/api/auth/user/logout`;
         await axios.post(endpoint);
       }
     } catch (err) {
