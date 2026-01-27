@@ -2,7 +2,8 @@
 import ChatWindow from '../components/ChatWindow';
 import ProfileMenu from '../components/ProfileMenu';
 import { useAuth } from '../contexts/AuthContext';
-
+import inficon from '../assests/InfinitumIcon.png';
+import psgLogo from '../assests/PSGLogo.png';
 interface ReviewerDashboardProps {
   onLogout: () => void;
 }
@@ -14,8 +15,8 @@ export default function ReviewerDashboard({ onLogout }: ReviewerDashboardProps) 
     <div className="flex flex-col h-screen w-full">
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-7">
-          <img src="/InfinitumIcon.png" alt="Infinitum Logo" className="h-12 w-12" />
-          <img src="/PSGLogo.png" alt="Psg Logo" className="h-10 w-10" />
+          <img src={inficon} alt="Infinitum Logo" className="h-12 w-12" />
+          <img  src={psgLogo} alt="Psg Logo" className="h-10 w-10" />
         </div>
         
         <h1 className="text-xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">
