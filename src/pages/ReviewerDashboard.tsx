@@ -13,18 +13,20 @@ export default function ReviewerDashboard({ onLogout }: ReviewerDashboardProps) 
 
   return (
     <div className="flex flex-col h-screen w-full">
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-7">
-          <img src={inficon} alt="Infinitum Logo" className="h-12 w-12" />
-          <img  src={psgLogo} alt="Psg Logo" className="h-10 w-10" />
+      <header className="bg-white border-b border-gray-200 px-3 md:px-6 py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          <img src={inficon} alt="Infinitum Logo" className="h-10 md:h-12 w-10 md:w-12" />
+          <img  src={psgLogo} alt="Psg Logo" className="h-8 md:h-10 w-8 md:w-10" />
         </div>
         
-        <h1 className="text-xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">
+        <h1 className="text-sm md:text-xl font-bold text-gray-900 flex-1 text-center truncate">
           Paper Presentation Portal
         </h1>
         
         {user && (
-          <ProfileMenu role={user.role} onLogout={onLogout} />
+          <div className="flex-shrink-0">
+            <ProfileMenu role={user.role} onLogout={onLogout} />
+          </div>
         )}
       </header>
 

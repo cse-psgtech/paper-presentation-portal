@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { LogOut, Phone, Building2, GraduationCap } from 'lucide-react';
 import { useAuth, type UserRole } from '../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 axios.defaults.withCredentials = true;
 
@@ -60,7 +61,7 @@ export default function ProfileMenu({ role, onLogout }: ProfileMenuProps) {
           });
         }
       } catch (err) {
-        console.error('Profile fetch failed', err);
+        toast.error('Profile fetch failed');
       }
     };
 
@@ -96,7 +97,7 @@ export default function ProfileMenu({ role, onLogout }: ProfileMenuProps) {
         await axios.post(endpoint);
       }
     } catch (err) {
-      console.error('Logout request failed', err);
+      toast.error('Logout request failed');
     } finally {
       onLogout();
     }

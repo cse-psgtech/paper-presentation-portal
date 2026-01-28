@@ -57,7 +57,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
           ? err.response?.data?.message || err.message
           : 'Failed to load submissions';
         setError(msg);
-        console.error('Fetch submissions error:', err);
+        toast.error(msg);
       } finally {
         setLoadingSubmissions(false);
       }
@@ -111,7 +111,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
         ? err.response?.data?.message || err.message
         : 'Failed to submit papers';
       setError(errorMessage);
-      console.error('Submission error:', err);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -148,7 +148,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
         ? err.response?.data?.message || err.message
         : 'Failed to accept submission';
       toast.error(errorMessage);
-      console.error('Accept submission error:', err);
+      // console.error('Accept submission error:', err);
     } finally {
       setAccepting(false);
       setConfirmDialog({ show: false, submissionId: null });

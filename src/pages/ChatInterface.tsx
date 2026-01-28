@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Send, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Send, ChevronDown, Paperclip, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { type ChatRoom, type Message } from '../types/chat';
 import FileManager from '../components/FileManager';
+import { toast } from 'react-hot-toast';
 
 // Configure axios to send cookies with requests
 axios.defaults.withCredentials = true;
@@ -12,14 +13,22 @@ const API_BASE_URL = import.meta.env.VITE_API_BACKEND_URL || 'http://localhost:5
 
 interface ChatInterfaceProps {
   selectedChatRoom: ChatRoom;
+  onBackToList?: () => void;
 }
 
-export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) {
+export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatInterfaceProps) {
   const { user } = useAuth();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFileManager, setShowFileManager] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -30,7 +39,7 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
         const response = await axios.get(
           `${API_BASE_URL}/api/events/paper/${user?.role}/chats/messages/${selectedChatRoom._id}`
         );
-        console.log(response);
+        //console.log(response);
         if (response.data.success) {
           setMessages(response.data.messages || []);
         } else {
@@ -41,7 +50,7 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
             ? err.response?.data?.message || err.message
             : 'Failed to fetch messages';
         setError(errorMessage);
-        console.error('Messages fetch error:', err);
+        toast.error(errorMessage);
       } finally {
         setMessagesLoading(false);
       }
@@ -68,7 +77,7 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
 
       // Send message to backend
       const response = await axios.post(
-        `${API_BASE_URL}/api/events/paper/${user.role}/messages/${selectedChatRoom._id}`,
+        `${API_BASE_URL}/api/events/paper/${user.role}/chats/messages/${selectedChatRoom._id}`,
         {
           message: currentInput,
           sender: user.role,
@@ -87,7 +96,7 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
         ? err.response?.data?.message || err.message
         : 'Failed to send message';
       setError(errorMessage);
-      console.error('Send message error:', err);
+      toast.error(errorMessage);
       // Revert optimistic update on failure
       setMessages(prevMessages => prevMessages.slice(0, -1));
       setInput(input);
@@ -110,16 +119,37 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
     );
   }
 
+  const handleFileIconClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setShowFileManager(true);
+    }
+  };
+
   return (
-    <div className="flex h-full bg-white w-full">
+    <div className="flex h-full bg-white w-full flex-col md:flex-row">
       {/* Left: chat area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col w-full">
         {/* Header with Paper Details */}
         <div className="bg-white border-b border-gray-200 p-4">
           <div className="flex items-start justify-between mb-3">
-            <div className="flex-1">
-              <h2 className="font-bold text-lg text-gray-900">{selectedChatRoom.userName}</h2>
-              <h2 className="font-bold text-lg text-gray-900">{selectedChatRoom.paperName}</h2>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {onBackToList && (
+                <button
+                  onClick={onBackToList}
+                  className="md:hidden flex-shrink-0 p-1 hover:bg-gray-100 rounded"
+                  title="Back to chats"
+                >
+                  <ArrowLeft size={20} className="text-gray-700" />
+                </button>
+              )}
+              <div className="flex-1 min-w-0">
+                <h2 className="font-bold text-lg text-gray-900 truncate">{selectedChatRoom.userName}</h2>
+                <h2 className="font-bold text-lg text-gray-900 truncate">{selectedChatRoom.paperName}</h2>
+              </div>
             </div>
             <span className={`px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
               selectedChatRoom.status === 'completed' ? 'bg-green-100 text-green-700' : 
@@ -199,6 +229,7 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
               );
             })
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
@@ -208,10 +239,10 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
               Chat is {selectedChatRoom.status}. No new messages can be sent.
             </p>
           )}
-          <div className="relative flex gap-2">
+          <div className="flex flex-row items-center gap-2">
             <textarea
-              className="flex-1 bg-gray-100 border-0 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 resize-none h-20 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              placeholder={selectedChatRoom.status === 'pending' ? "Type your message here..." : "Chat is closed"}
+              className="flex-1 bg-gray-100 border-0 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 resize-none h-12 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder={selectedChatRoom.status === 'pending' ? "Type your message..." : "Chat is closed"}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={selectedChatRoom.status !== 'pending'}
@@ -222,26 +253,67 @@ export default function ChatInterface({ selectedChatRoom }: ChatInterfaceProps) 
                 }
               }}
             />
+            {/* File Upload Icon */}
+            <button
+              onClick={handleFileIconClick}
+              disabled={selectedChatRoom.status !== 'pending'}
+              className="p-3 text-gray-500 hover:text-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Attach file"
+            >
+              <Paperclip size={24} />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileSelected}
+              accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
+            />
+            {/* Send Button */}
             <button 
               onClick={handleSend}
               disabled={selectedChatRoom.status !== 'pending' || !input.trim()}
-              className="self-end p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              title={selectedChatRoom.status === 'pending' ? 'Send message (Shift+Enter for new line)' : 'Chat is closed'}
+              className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+              title={selectedChatRoom.status === 'pending' ? 'Send message' : 'Chat is closed'}
             >
-              <Send size={20} />
+              <Send size={24} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Right: file manager */}
-      <aside className="w-96 min-w-[320px] border-l border-gray-200">
+      {/* Right: file manager - Desktop */}
+      <aside className="hidden md:flex md:w-96 md:min-w-[320px] border-l border-gray-200 flex-col">
         <FileManager 
           role={user?.role || 'user'}
           chatId={selectedChatRoom._id}
           paperId={selectedChatRoom.paperId}
         />
       </aside>
+
+      {/* Mobile File Manager Modal */}
+      {showFileManager && (
+        <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
+          <div className="w-full bg-white rounded-t-lg max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="font-semibold text-gray-900">Files</h3>
+              <button
+                onClick={() => setShowFileManager(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <span className="text-2xl text-gray-500">×</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <FileManager 
+                role={user?.role || 'user'}
+                chatId={selectedChatRoom._id}
+                paperId={selectedChatRoom.paperId}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

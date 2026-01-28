@@ -15,6 +15,7 @@ export default function ChatWindow() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedChatRoomId, setSelectedChatRoomId] = useState<string | null>(null);
+  const [showChatList, setShowChatList] = useState(true);
   const { user } = useAuth();
 
   // Fetch chatrooms on component mount
@@ -28,7 +29,6 @@ export default function ChatWindow() {
       try {
         setLoading(true);
         const response = await axios.get(`${API_BASE_URL}/api/events/paper/${user?.role}/chats`);
-        console.log(response);
         if (response.data.success) {
           const rooms = response.data.chats || [];
           setChatRooms(rooms);
@@ -44,7 +44,7 @@ export default function ChatWindow() {
           ? err.response?.data?.message || err.message
           : 'Failed to fetch chatrooms';
         setError(errorMessage);
-        console.error('Chatrooms fetch error:', err);
+        // console.error('Chatrooms fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -55,10 +55,19 @@ export default function ChatWindow() {
 
   const selectedChatRoom = chatRooms.find(room => room._id === selectedChatRoomId);
 
+  const handleSelectChatRoom = (chatRoomId: string) => {
+    setSelectedChatRoomId(chatRoomId);
+    setShowChatList(false);
+  };
+
+  const handleBackToList = () => {
+    setShowChatList(true);
+  };
+
   return (
     <div className="flex h-full gap-0">
       {/* Left Sidebar - Chat Rooms List */}
-      <div className="w-80 border-r border-gray-200 bg-white flex flex-col">
+      <div className="hidden md:flex md:w-80 border-r border-gray-200 bg-white flex-col">
         <ChatRoomsList 
           chatRooms={chatRooms}
           loading={loading}
@@ -68,8 +77,36 @@ export default function ChatWindow() {
         />
       </div>
 
+      {/* Mobile Chat List */}
+      {showChatList && (
+        <div className="md:hidden w-full bg-white flex flex-col">
+          <ChatRoomsList 
+            chatRooms={chatRooms}
+            loading={loading}
+            error={error}
+            selectedChatRoomId={selectedChatRoomId}
+            onSelectChatRoom={handleSelectChatRoom}
+          />
+        </div>
+      )}
+
       {/* Right Panel - Chat Interface */}
-      <div className="flex-1 flex flex-col w-full">
+      {!showChatList && (
+        <div className="flex-1 flex flex-col w-full">
+          {selectedChatRoom ? (
+            <ChatInterface selectedChatRoom={selectedChatRoom} onBackToList={handleBackToList} />
+          ) : (
+            <div className="flex items-center justify-center h-full bg-gray-50">
+              <div className="text-center">
+                <p className="text-gray-500 text-lg">Select a chat to start messaging</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Desktop Chat Interface */}
+      <div className="hidden md:flex md:flex-1 md:flex-col w-full">
         {selectedChatRoom ? (
           <ChatInterface selectedChatRoom={selectedChatRoom} />
         ) : (

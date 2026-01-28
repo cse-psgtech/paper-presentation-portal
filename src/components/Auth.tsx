@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, UserCheck, User, Eye, EyeOff } from 'lucide-react';
 import { useAuth, type UserRole } from '../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 // Configure axios to send cookies with requests
 axios.defaults.withCredentials = true;
@@ -56,8 +57,7 @@ export default function Auth() {
         const errorMessage = axios.isAxiosError(err)
           ? err.response?.data?.message || err.message
           : 'Google login failed. Please try again.';
-        setError(errorMessage);
-        console.error('Google OAuth error:', err);
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -103,7 +103,7 @@ export default function Auth() {
         ? err.response?.data?.message || err.message
         : 'An error occurred';
       setError(errorMessage);
-      console.error('Auth error:', err);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

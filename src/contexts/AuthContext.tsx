@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export type UserRole = 'user' | 'reviewer';
 
@@ -56,7 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         withCredentials: true
       });
 
-      console.log("Response from The auth", response )
+      //console.log("Response from The auth", response )
 
       // Handle reviewer response
       if (response.data.reviewer) {
@@ -81,7 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         sessionStorage.setItem('userRole', 'user');
       }
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      toast.error('Failed to fetch profile');
       setUser(null);
     }
   };
@@ -107,7 +108,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         withCredentials: true
       });
     } catch (error) {
-      console.error('Logout error:', error);
+      toast.error('Logout error');
     } finally {
       setUser(null);
       sessionStorage.removeItem('userRole');

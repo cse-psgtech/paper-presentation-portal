@@ -6,55 +6,81 @@ import Auth from './components/Auth';
 import ReviewerDashboard from './pages/ReviewerDashboard';
 import AuthorDashboard from './pages/AuthorDashboard';
 
+const toastConfig = {
+    className: '',
+    duration: 5000,
+    style: {
+      background: '#ffffff',
+      color: '#363636',
+    },
+
+    success: {
+      duration: 3000,
+      theme: {
+        primary: 'green',
+        secondary: 'black',
+      },
+      iconTheme: {
+        primary: '#10B981',
+        secondary: '#FFFFFF',
+      },
+      style: {
+        border: '1px solid #10B981',
+      }
+    },
+    error: {
+      iconTheme: {
+        primary: '#EF4444',
+        secondary: '#FFFFFF',
+      },
+      style: {
+        border: '1px solid #EF4444',
+      }
+    },
+}
+
 function AppContent() {
   const { logout, isLoading, isAuthenticated, user } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <Routes>
-      <Route 
-        path="/auth" 
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Auth />} 
+    <>
+      <Toaster 
+        position="top-center"
+        reverseOrder={false}
+        gutter={8}
+        toastOptions={toastConfig}
       />
-      <Route 
-        path="/reviewer/*" 
-        element={
-          <ProtectedRoute allowedRoles={['reviewer']}>
-            <ReviewerDashboard onLogout={logout} />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/author/*" 
-        element={
-          <ProtectedRoute allowedRoles={['user']}>
-            <AuthorDashboard onLogout={logout} />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/" 
-        element={
-          isAuthenticated ? 
-            <Navigate to={user?.role === 'user' ? '/author' : '/reviewer'} replace /> : 
-            <Navigate to="/auth" replace />
-        } 
-      />
-      <Route 
-        path="*" 
-        element={<Navigate to="/" replace />} 
-      />
-    </Routes>
+      <Routes>
+        <Route path="/auth" element={isAuthenticated ? <Navigate to={user?.role === 'reviewer' ? '/reviewer' : '/author'} /> : <Auth />} />
+        
+        <Route 
+          path="/reviewer" 
+          element={
+            <ProtectedRoute allowedRoles={['reviewer']}>
+              <ReviewerDashboard onLogout={logout} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/author" 
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <AuthorDashboard onLogout={logout} />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route path="*" element={<Navigate to="/auth" />} />
+      </Routes>
+    </>
   );
 }
 
