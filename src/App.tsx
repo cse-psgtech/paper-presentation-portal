@@ -61,7 +61,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/paper">
+      <Router>
         <AppContent />
         <Toaster position="top-right" />
       </Router>
