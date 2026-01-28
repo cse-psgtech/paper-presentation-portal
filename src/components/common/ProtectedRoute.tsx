@@ -10,8 +10,6 @@ export default function ProtectedRoute({ allowedRoles, children }: ProtectedRout
   const { role, isAuthenticated, isLoading } = useAuthContext();
   const location = useLocation();
 
-  console.log('This is from protected Route:', role);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">

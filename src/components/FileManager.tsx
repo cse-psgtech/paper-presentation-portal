@@ -20,6 +20,7 @@ interface Submission {
   paperId: string;
   userId: string;
   fileUrl: string;
+  filename?: string;
   accepted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -130,7 +131,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
 
     setAccepting(true);
     try {
-      const endpoint = `${API_BASE_URL}/api/events/paper/reviewer/submissions/${chatId}`;
+      const endpoint = `${API_BASE_URL}/api/events/paper/reviewer/submissions/${confirmDialog.submissionId}`;
       const response = await axios.post(endpoint);
 
       if (response.data?.success) {
@@ -190,7 +191,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
                     </div>
                     <div className="flex-1 overflow-hidden">
                       <p className="text-sm font-medium text-gray-800 truncate">
-                        Paper Submission
+                        {submission.filename || 'Paper Submission'}
                       </p>
                       <p className="text-xs text-gray-500">
                         Submitted: {new Date(submission.createdAt).toLocaleString()}
