@@ -128,10 +128,11 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
 
   const handleConfirmAccept = async () => {
     if (!confirmDialog.submissionId || !chatId) return;
+    console.log("Submission id: ", confirmDialog.submissionId);
 
     setAccepting(true);
     try {
-      const endpoint = `${API_BASE_URL}/api/events/paper/reviewer/submissions/${confirmDialog.submissionId}`;
+      const endpoint = `${API_BASE_URL}/api/events/paper/reviewer/submission/${confirmDialog.submissionId}`;
       const response = await axios.post(endpoint);
 
       if (response.data?.success) {
@@ -219,7 +220,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
 
         {/* Confirmation Dialog */}
         {confirmDialog.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Accept Submission?</h3>
               <p className="text-sm text-gray-600 mb-6">
