@@ -16,7 +16,7 @@ export default function Auth() {
   const { fetchProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<UserRole>('reviewer');
+  const [userRole, setUserRole] = useState<UserRole>('user');
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
