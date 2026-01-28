@@ -1,25 +1,22 @@
-FROM node:20-alpine AS build
+FROM node:20-alpine
+
 WORKDIR /app
 
-ARG VITE_API_BACKEND_URL
+# Copy package files first for better caching
+COPY package*.json ./
+RUN npm install
 
-COPY package.json package-lock.json ./
-RUN npm ci
-
+# Copy source code
 COPY . .
 
+# Define build arguments for environment variables
+ARG VITE_API_BACKEND_URL
+
+# Set environment variables from build args
 ENV VITE_API_BACKEND_URL=$VITE_API_BACKEND_URL
 
 RUN npm run build
 
-# Run time Image
-FROM node:20-alpine AS runtime
-WORKDIR /app
-ENV NODE_ENV=production
+EXPOSE 5173
 
-RUN npm install -g serve
-
-COPY --from=build /app/dist ./dist
-
-EXPOSE 4173
-CMD ["serve", "-s", "dist", "-l", "4173"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
