@@ -83,6 +83,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         // Check if user has formed a team (only for paper portal users)
         try {
+          console.log("fetching Team Info")
           const teamResponse = await axios.get(`${API_BACKEND_URL}/api/events/paper/user/has-team`, {
             withCredentials: true
           });
@@ -119,14 +120,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       const storedRole = sessionStorage.getItem('userRole') as UserRole | null;
-      await axios.post(`${API_BACKEND_URL}/api/auth/${storedRole}/logout`, {}, {
-        withCredentials: true
-      });
+      if (storedRole) {
+        await axios.post(`${API_BACKEND_URL}/api/auth/${storedRole}/logout`, {}, {
+          withCredentials: true
+        });
+      }
     } catch (error) {
-      toast.error('Logout error');
+      console.error('Logout error:', error);
     } finally {
       setUser(null);
       sessionStorage.removeItem('userRole');
+      window.location.href = '/paper/auth';
     }
   };
 

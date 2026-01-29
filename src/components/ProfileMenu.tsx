@@ -87,20 +87,8 @@ export default function ProfileMenu({ role, onLogout }: ProfileMenuProps) {
   const initial = displayName.trim().charAt(0).toUpperCase();
   const profilePhoto = isUserProfile(profile) ? profile.profilePhoto : undefined;
 
-  const handleLogout = async () => {
-    try {
-      if (API_BACKEND_URL) {
-        const endpoint =
-          role === 'reviewer'
-            ? `${API_BACKEND_URL}/api/auth/reviewer/logout`
-            : `${API_BACKEND_URL}/api/auth/user/logout`;
-        await axios.post(endpoint);
-      }
-    } catch (err) {
-      toast.error('Logout request failed');
-    } finally {
-      onLogout();
-    }
+  const handleLogout = () => {
+    onLogout();
   };
 
   return (
