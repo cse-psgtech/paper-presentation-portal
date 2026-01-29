@@ -47,16 +47,25 @@ export default function Auth() {
     const completeGoogleLogin = async () => {
       setLoading(true);
       try {
-        await axios.post(
+        const response = await axios.post(
           `${API_BACKEND_URL}/api/auth/user/ppp/login-google`,
           { email, googleId }
         );
-        await fetchProfile('user');
-        navigate('/author', { replace: true });
+        const profileResult = await fetchProfile('user');
+
+        // Priority to redirect from fetchProfile (the new check)
+        if (profileResult?.redirect) {
+          navigate(profileResult.redirect, { replace: true });
+        } else if (response.data.redirect) {
+          navigate(response.data.redirect, { replace: true });
+        } else {
+          navigate('/author', { replace: true });
+        }
       } catch (err) {
         const errorMessage = axios.isAxiosError(err)
           ? err.response?.data?.message || err.message
           : 'Google login failed. Please try again.';
+        setError(errorMessage);
         toast.error(errorMessage);
       } finally {
         setLoading(false);
@@ -96,8 +105,13 @@ export default function Auth() {
         return;
       }
 
-      await fetchProfile(userRole);
-      navigate(userRole === 'user' ? '/author' : '/reviewer');
+      const profileResult = await fetchProfile(userRole);
+
+      if (profileResult?.redirect) {
+        navigate(profileResult.redirect, { replace: true });
+      } else {
+        navigate(userRole === 'user' ? '/author' : '/reviewer');
+      }
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
         ? err.response?.data?.message || err.message
@@ -122,7 +136,7 @@ export default function Auth() {
                 right: userRole === 'reviewer' ? '50%' : '0.25rem',
               }}
             />
-            
+
             {/* Reviewer Tab */}
             <button
               type="button"
@@ -130,16 +144,15 @@ export default function Auth() {
                 setUserRole('reviewer');
                 setError(null);
               }}
-              className={`relative flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors duration-300 z-10 ${
-                userRole === 'reviewer'
-                  ? 'text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`relative flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors duration-300 z-10 ${userRole === 'reviewer'
+                ? 'text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               <UserCheck className="mr-2" size={20} />
               Reviewer
             </button>
-            
+
             {/* Author Tab */}
             <button
               type="button"
@@ -147,11 +160,10 @@ export default function Auth() {
                 setUserRole('user');
                 setError(null);
               }}
-              className={`relative flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors duration-300 z-10 ${
-                userRole === 'user'
-                  ? 'text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`relative flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors duration-300 z-10 ${userRole === 'user'
+                ? 'text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               <User className="mr-2" size={20} />
               Author

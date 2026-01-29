@@ -5,38 +5,39 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import Auth from './components/Auth';
 import ReviewerDashboard from './pages/ReviewerDashboard';
 import AuthorDashboard from './pages/AuthorDashboard';
+import CreateTeam from './pages/CreateTeam';
 
 const toastConfig = {
-    className: '',
-    duration: 5000,
-    style: {
-      background: '#ffffff',
-      color: '#363636',
-    },
+  className: '',
+  duration: 5000,
+  style: {
+    background: '#ffffff',
+    color: '#363636',
+  },
 
-    success: {
-      duration: 3000,
-      theme: {
-        primary: 'green',
-        secondary: 'black',
-      },
-      iconTheme: {
-        primary: '#10B981',
-        secondary: '#FFFFFF',
-      },
-      style: {
-        border: '1px solid #10B981',
-      }
+  success: {
+    duration: 3000,
+    theme: {
+      primary: 'green',
+      secondary: 'black',
     },
-    error: {
-      iconTheme: {
-        primary: '#EF4444',
-        secondary: '#FFFFFF',
-      },
-      style: {
-        border: '1px solid #EF4444',
-      }
+    iconTheme: {
+      primary: '#10B981',
+      secondary: '#FFFFFF',
     },
+    style: {
+      border: '1px solid #10B981',
+    }
+  },
+  error: {
+    iconTheme: {
+      primary: '#EF4444',
+      secondary: '#FFFFFF',
+    },
+    style: {
+      border: '1px solid #EF4444',
+    }
+  },
 }
 
 function AppContent() {
@@ -52,7 +53,7 @@ function AppContent() {
 
   return (
     <>
-      <Toaster 
+      <Toaster
         position="top-center"
         reverseOrder={false}
         gutter={8}
@@ -60,24 +61,32 @@ function AppContent() {
       />
       <Routes>
         <Route path="/auth" element={isAuthenticated ? <Navigate to={user?.role === 'reviewer' ? '/reviewer' : '/author'} /> : <Auth />} />
-        
-        <Route 
-          path="/reviewer" 
+
+        <Route
+          path="/reviewer"
           element={
             <ProtectedRoute allowedRoles={['reviewer']}>
               <ReviewerDashboard onLogout={logout} />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/author" 
+        <Route
+          path="/author"
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <AuthorDashboard onLogout={logout} />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+        <Route
+          path="/create-team"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <CreateTeam />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/auth" />} />
       </Routes>
     </>

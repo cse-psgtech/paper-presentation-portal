@@ -13,7 +13,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  fetchProfile: (role?: UserRole) => Promise<void>;
+  fetchProfile: (role?: UserRole) => Promise<{ redirect?: string } | void>;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchProfile = async (role?: UserRole) => {
     try {
 
-      let endpoint = ``;      
+      let endpoint = ``;
       if (role === 'reviewer') {
         endpoint = `${API_BACKEND_URL}/api/auth/reviewer/status`;
       } else if (role === 'user') {
@@ -80,7 +80,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         };
         setUser(userData);
         sessionStorage.setItem('userRole', 'user');
+
+        // Check if user has formed a team (only for paper portal users)
+        try {
+          const teamResponse = await axios.get(`${API_BACKEND_URL}/api/events/paper/user/has-team`, {
+            withCredentials: true
+          });
+
+          if (teamResponse.data.success && !teamResponse.data.hasTeam) {
+            return { redirect: '/create-team' };
+          }
+        } catch (teamError) {
+          console.error("Failed to fetch team status", teamError);
+        }
       }
+      return;
     } catch (error) {
       toast.error('Failed to fetch profile');
       setUser(null);
@@ -104,7 +118,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     try {
-      await axios.post(`${API_BACKEND_URL}/api/auth/logout`, {}, {
+      const storedRole = sessionStorage.getItem('userRole') as UserRole | null;
+      await axios.post(`${API_BACKEND_URL}/api/auth/${storedRole}/logout`, {}, {
         withCredentials: true
       });
     } catch (error) {
