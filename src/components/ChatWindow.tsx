@@ -29,10 +29,11 @@ export default function ChatWindow() {
       try {
         setLoading(true);
         const response = await axios.get(`${API_BASE_URL}/api/events/paper/${user?.role}/chats`);
+        console.log(response.data)
         if (response.data.success) {
           const rooms = response.data.chats || [];
           setChatRooms(rooms);
-         
+
           if (rooms.length > 0 && !selectedChatRoomId) {
             setSelectedChatRoomId(rooms[0]._id);
           }
@@ -68,7 +69,7 @@ export default function ChatWindow() {
     <div className="flex h-full gap-0">
       {/* Left Sidebar - Chat Rooms List */}
       <div className="hidden md:flex md:w-80 border-r border-gray-200 bg-white flex-col">
-        <ChatRoomsList 
+        <ChatRoomsList
           chatRooms={chatRooms}
           loading={loading}
           error={error}
@@ -80,7 +81,7 @@ export default function ChatWindow() {
       {/* Mobile Chat List */}
       {showChatList && (
         <div className="md:hidden w-full bg-white flex flex-col">
-          <ChatRoomsList 
+          <ChatRoomsList
             chatRooms={chatRooms}
             loading={loading}
             error={error}

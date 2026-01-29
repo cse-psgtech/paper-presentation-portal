@@ -12,9 +12,9 @@ interface ChatRoomsListProps {
   onSelectChatRoom: (chatRoomId: string) => void;
 }
 
-export default function ChatRoomsList({ 
-  chatRooms, 
-  loading, 
+export default function ChatRoomsList({
+  chatRooms,
+  loading,
   error,
   selectedChatRoomId,
   onSelectChatRoom
@@ -25,7 +25,8 @@ export default function ChatRoomsList({
   const filteredChatRooms = chatRooms.filter(room =>
     room.paperName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     room.paperId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    room.userName.toLowerCase().includes(searchTerm.toLowerCase())
+    (room.userName && room.userName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (room.teamName && room.teamName.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (loading) {
@@ -40,8 +41,8 @@ export default function ChatRoomsList({
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <p className="text-red-600 mb-2">Error: {error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Retry
@@ -80,28 +81,26 @@ export default function ChatRoomsList({
               <div
                 key={chatRoom._id}
                 onClick={() => onSelectChatRoom(chatRoom._id)}
-                className={`px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 ${
-                  selectedChatRoomId === chatRoom._id ? 'bg-gray-100 border-l-4 border-blue-600' : ''
-                }`}
+                className={`px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 ${selectedChatRoomId === chatRoom._id ? 'bg-gray-100 border-l-4 border-blue-600' : ''
+                  }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-900 truncate">
-                      {user?.role === 'reviewer' ? chatRoom.userName : chatRoom.paperId}
+                      {user?.role === 'reviewer' ? (chatRoom.teamName || chatRoom.userName || 'Individual Submitter') : chatRoom.paperId}
                     </h3>
                     <p className="text-sm text-gray-600 truncate">
-                       {chatRoom.paperName}
+                      {chatRoom.paperName}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {chatRoom.theme}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      chatRoom.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                      chatRoom.status === 'declined' ? 'bg-red-100 text-red-800' : 
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${chatRoom.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      chatRoom.status === 'declined' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
                       {chatRoom.status}
                     </span>
                   </div>

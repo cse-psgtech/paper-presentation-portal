@@ -9,6 +9,8 @@ export interface ChatRoom {
   _id: string;
   paperId: string;
   userId: string;
+  team_id?: string;
+  teamName?: string;
   reviewer_id: string;
   status: 'pending' | 'completed' | 'declined';
   closed: boolean;

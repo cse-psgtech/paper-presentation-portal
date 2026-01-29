@@ -34,7 +34,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
   const [error, setError] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; submissionId: string | null }>({ show: false, submissionId: null });
   const [accepting, setAccepting] = useState(false);
-
+  //console.log(submissions)
   // Fetch submitted files for this chat (both reviewer and author)
   useEffect(() => {
     if (!chatId) return;
@@ -43,10 +43,10 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
       try {
         setLoadingSubmissions(true);
         setError(null);
-        const endpoint = role === 'reviewer' 
+        const endpoint = role === 'reviewer'
           ? `${API_BASE_URL}/api/events/paper/reviewer/submissions/${chatId}`
           : `${API_BASE_URL}/api/events/paper/user/submissions/${chatId}`;
-        
+
         const { data } = await axios.get(endpoint);
         if (data?.success && Array.isArray(data.submissions)) {
           setSubmissions(data.submissions);
@@ -107,6 +107,9 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
 
       setFiles([]);
       toast.success('Files uploaded successfully');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
         ? err.response?.data?.message || err.message
@@ -128,20 +131,18 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
 
   const handleConfirmAccept = async () => {
     if (!confirmDialog.submissionId || !chatId) return;
-    console.log("Submission id: ", confirmDialog.submissionId);
+    //console.log("Submission id: ", confirmDialog.submissionId);
 
     setAccepting(true);
     try {
-      const endpoint = `${API_BASE_URL}/api/events/paper/reviewer/submission/${confirmDialog.submissionId}`;
+      const endpoint = `${API_BASE_URL}/api/events/paper/reviewer/submissions/${confirmDialog.submissionId}`;
       const response = await axios.post(endpoint);
 
       if (response.data?.success) {
         toast.success('Submission accepted successfully');
-        // Refresh submissions
-        const { data } = await axios.get(endpoint);
-        if (data?.success && Array.isArray(data.submissions)) {
-          setSubmissions(data.submissions);
-        }
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } else {
         toast.error('Failed to accept submission');
       }
@@ -183,7 +184,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
                 className="p-3 bg-gray-50 border border-gray-200 rounded-lg"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div 
+                  <div
                     className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-gray-100 -m-3 p-3 rounded-lg transition"
                     onClick={() => handleOpenFile(submission.fileUrl)}
                   >
@@ -279,7 +280,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
                 <div className="flex-1 overflow-hidden">
                   <p className="text-xs font-medium text-gray-700 truncate">{file.name}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setFiles(files.filter((_, i) => i !== index))}
                   className="text-gray-400 hover:text-red-500 transition"
                 >
@@ -288,7 +289,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
               </div>
             ))}
           </div>
-          <button 
+          <button
             onClick={handleSubmit}
             className="mt-3 w-full py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={files.length === 0 || isSubmitting}
@@ -343,7 +344,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
           </div>
         )}
       </div>
-      
+
       {/* Error Message */}
       {error && (
         <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">

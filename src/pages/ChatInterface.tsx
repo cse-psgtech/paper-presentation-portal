@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Paperclip, ArrowLeft, MoreVertical, Search, X } from 'lucide-react';
+import { Send, Paperclip, ArrowLeft, MoreVertical, Search, X, ChevronUp, Info, Calendar, MapPin, Users, BookOpen, Tag, FileText, CheckCircle2, Clock } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { type ChatRoom, type Message } from '../types/chat';
@@ -29,6 +29,7 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [showDetails, setShowDetails] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchResultsRef = useRef<Array<HTMLDivElement | null>>([]);
@@ -42,7 +43,7 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
       try {
         setMessagesLoading(true);
         setMessages([]);
-        
+
         const response = await axios.get(
           `${API_BASE_URL}/api/events/paper/${user?.role}/chats/messages/${selectedChatRoom._id}`
         );
@@ -54,8 +55,8 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
         }
       } catch (err) {
         const errorMessage = axios.isAxiosError(err)
-            ? err.response?.data?.message || err.message
-            : 'Failed to fetch messages';
+          ? err.response?.data?.message || err.message
+          : 'Failed to fetch messages';
         setError(errorMessage);
         toast.error(errorMessage);
       } finally {
@@ -74,7 +75,7 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
     if (!input.trim() || !selectedChatRoom || !user?.role) return;
 
     try {
-      
+
       // Add user message to UI immediately (optimistic update)
       const newMessage: Message = {
         message: input,
@@ -119,8 +120,8 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
       <div className="flex items-center justify-center h-full bg-gray-50">
         <div className="text-center">
           <p className="text-red-600 mb-2">Error: {error}</p>
-          <button 
-            onClick={() => setError(null)} 
+          <button
+            onClick={() => setError(null)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Dismiss
@@ -142,10 +143,10 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
 
   const handleSearch = () => {
     if (!debouncedSearchTerm.trim()) return;
-    const indices = messages.flatMap((msg, index) => 
+    const indices = messages.flatMap((msg, index) =>
       msg.message.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ? [index] : []
     );
-    
+
     if (indices.length > 0) {
       const nextIndex = indices.find(i => i > highlightedIndex);
       const newIndex = nextIndex !== undefined ? nextIndex : indices[0];
@@ -164,7 +165,7 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
       setHighlightedIndex(-1);
     }
   }, [debouncedSearchTerm, isSearchVisible]);
-  
+
   const filteredMessages = messages; // We'll highlight instead of filtering
 
   return (
@@ -185,11 +186,24 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
                 </button>
               )}
               <div className="flex-1 min-w-0">
-                <h2 className="font-bold text-base md:text-lg text-gray-900 truncate">{selectedChatRoom.paperName}</h2>
-                <p className="text-xs md:text-sm text-gray-500 truncate">{selectedChatRoom.userName}</p>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-bold text-base md:text-lg text-gray-900 truncate">
+                    {user?.role === 'reviewer' ? (selectedChatRoom.teamName || selectedChatRoom.userName) : selectedChatRoom.paperName}
+                  </h2>
+                  <button
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="p-1 hover:bg-gray-100 rounded-full text-blue-600 transition-colors"
+                    title="View Paper Details"
+                  >
+                    {showDetails ? <ChevronUp size={18} /> : <Info size={18} />}
+                  </button>
+                </div>
+                <p className="text-xs md:text-sm text-gray-500 truncate">
+                  {user?.role === 'reviewer' ? selectedChatRoom.paperName : `Reviewer: ${selectedChatRoom.reviewerName || 'Not Assigned'}`}
+                </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-1">
               {/* Search Button */}
               <button
@@ -259,6 +273,102 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
           )}
         </div>
 
+        {/* Paper Details Dropdown */}
+        {showDetails && (
+          <div className="bg-blue-50 border-b border-blue-100 p-4 animate-in slide-in-from-top duration-300 overflow-y-auto max-h-[60vh]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <FileText className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Paper ID</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedChatRoom.paperId}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <BookOpen className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Theme & Topic</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedChatRoom.theme}</p>
+                    <p className="text-xs text-gray-600">{selectedChatRoom.topic}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Tag className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tagline</p>
+                    <p className="text-sm italic text-gray-700">"{selectedChatRoom.tagline}"</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <Users className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Team Details</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedChatRoom.teamName || 'Individual'}</p>
+                    {selectedChatRoom.teamSize > 0 && (
+                      <p className="text-xs text-gray-600">Size: {selectedChatRoom.teamSize} members</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Venue (Hall)</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedChatRoom.hall || 'To be announced'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Calendar className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Presentation Date</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedChatRoom.date ? new Date(selectedChatRoom.date).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'TBD'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <Clock className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Submission Deadline</p>
+                    <p className="text-sm font-medium text-red-600">
+                      {selectedChatRoom.deadline ? new Date(selectedChatRoom.deadline).toLocaleDateString(undefined, { dateStyle: 'medium' }) : 'Expired'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</p>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1 ${selectedChatRoom.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      selectedChatRoom.status === 'declined' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                      {selectedChatRoom.status.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                {selectedChatRoom.rules && (
+                  <div className="flex items-start gap-2">
+                    <Info className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+                    <div className="w-full">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rules</p>
+                      <div className="text-xs text-gray-700 whitespace-pre-line bg-white/50 p-2 rounded border border-blue-100 mt-1 max-h-24 overflow-y-auto">
+                        {selectedChatRoom.rules}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messagesLoading ? (
@@ -272,31 +382,29 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
           ) : (
             filteredMessages.map((msg, idx) => {
               const timestamp = new Date(msg.createdAt);
-              const msgTime = !isNaN(timestamp.getTime()) 
-                ? timestamp.toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: true 
-                  })
+              const msgTime = !isNaN(timestamp.getTime())
+                ? timestamp.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true
+                })
                 : '--:--';
-              
+
               const isHighlighted = idx === highlightedIndex;
 
               return (
-                <div 
+                <div
                   key={msg._id || idx}
                   ref={el => { searchResultsRef.current[idx] = el; }}
                   className={`flex ${msg.sender_type === user?.role ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[70%] p-3 rounded-lg text-sm transition-all duration-300 ${
-                    msg.sender_type === user?.role 
-                      ? 'bg-blue-600 text-white rounded-br-none' 
-                      : 'bg-gray-100 text-gray-900 rounded-bl-none'
-                  } ${isHighlighted ? 'ring-2 ring-yellow-400 ring-offset-2' : ''}`}>
+                  <div className={`max-w-[70%] p-3 rounded-lg text-sm transition-all duration-300 ${msg.sender_type === user?.role
+                    ? 'bg-blue-600 text-white rounded-br-none'
+                    : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                    } ${isHighlighted ? 'ring-2 ring-yellow-400 ring-offset-2' : ''}`}>
                     <p className="break-words">{msg.message}</p>
-                    <span className={`text-[10px] block mt-1 ${
-                      msg.sender_type === user?.role ? 'text-blue-200' : 'text-gray-500'
-                    }`}>
+                    <span className={`text-[10px] block mt-1 ${msg.sender_type === user?.role ? 'text-blue-200' : 'text-gray-500'
+                      }`}>
                       {msgTime}
                     </span>
                   </div>
@@ -347,7 +455,7 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
               />
             </div>
             {/* Send Button */}
-            <button 
+            <button
               onClick={handleSend}
               disabled={selectedChatRoom.status !== 'pending' || !input.trim()}
               className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
@@ -361,7 +469,7 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
 
       {/* Right: file manager - Desktop */}
       <aside className="hidden md:flex md:w-96 md:min-w-[320px] border-l border-gray-200 flex-col">
-        <FileManager 
+        <FileManager
           role={user?.role || 'user'}
           chatId={selectedChatRoom._id}
           paperId={selectedChatRoom.paperId}
@@ -382,7 +490,7 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <FileManager 
+              <FileManager
                 role={user?.role || 'user'}
                 chatId={selectedChatRoom._id}
                 paperId={selectedChatRoom.paperId}

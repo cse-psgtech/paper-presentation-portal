@@ -38,7 +38,7 @@ export default function CreateTeam() {
                 `${API_BACKEND_URL}/api/events/paper/user/team?search=${searchQuery}`,
                 { withCredentials: true }
             );
-            console.log(response.data)
+            //console.log(response.data)
             if (response.data.success) {
                 setSearchResults(response.data.users);
             }
