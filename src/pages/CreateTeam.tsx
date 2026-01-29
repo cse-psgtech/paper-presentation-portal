@@ -11,7 +11,7 @@ const API_BACKEND_URL = import.meta.env.VITE_API_BACKEND_URL;
 
 export default function CreateTeam() {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
     const [teamName, setTeamName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<{ name: string, uniqueId: string }[]>([]);
