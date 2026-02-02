@@ -1,8 +1,9 @@
-import { MessageSquare, Search } from 'lucide-react';
+import { MessageSquare, Search, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { type ChatRoom } from '../types/chat';
 import ChatLoader from '../components/common/ChatLoader';
+import ManageTeamModal from '../components/ManageTeamModal';
 
 interface ChatRoomsListProps {
   chatRooms: ChatRoom[];
@@ -21,6 +22,7 @@ export default function ChatRoomsList({
 }: ChatRoomsListProps) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
 
   const filteredChatRooms = chatRooms.filter(room =>
     room.paperName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -55,7 +57,18 @@ export default function ChatRoomsList({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
-        <h2 className="font-bold text-xl text-gray-900 mb-3">Papers</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-xl text-gray-900">Papers</h2>
+          {user?.role === 'user' && (
+            <button
+              onClick={() => setIsTeamModalOpen(true)}
+              className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors border border-blue-100"
+            >
+              <Users size={16} />
+              Team
+            </button>
+          )}
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
           <input
@@ -96,7 +109,7 @@ export default function ChatRoomsList({
                       {chatRoom.theme}
                     </p>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right shrink-0">
                     <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${chatRoom.status === 'completed' ? 'bg-green-100 text-green-800' :
                       chatRoom.status === 'declined' ? 'bg-red-100 text-red-800' :
                         'bg-yellow-100 text-yellow-800'
@@ -110,6 +123,10 @@ export default function ChatRoomsList({
           </div>
         )}
       </div>
+      <ManageTeamModal
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
+      />
     </div>
   );
 }

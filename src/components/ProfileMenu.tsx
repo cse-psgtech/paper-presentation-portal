@@ -108,7 +108,7 @@ export default function ProfileMenu({ role, onLogout }: ProfileMenuProps) {
         <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-100 py-3 z-20">
           <div className="px-4 pb-3 border-b border-gray-100">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center overflow-hidden shrink-0">
                 {profilePhoto ? (
                   <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -136,7 +136,7 @@ export default function ProfileMenu({ role, onLogout }: ProfileMenuProps) {
                 )}
                 {profile.college && (
                   <div className="flex items-start gap-2">
-                    <Building2 size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                    <Building2 size={12} className="text-gray-400 mt-0.5 shrink-0" />
                     <span className="line-clamp-2">{profile.college}</span>
                   </div>
                 )}
