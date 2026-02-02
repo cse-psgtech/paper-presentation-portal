@@ -108,6 +108,26 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
         }
     };
 
+    const removeMember = async (memberId: string) => {
+        if (!window.confirm("Are you sure you want to remove this member?")) return;
+
+        try {
+            const response = await axios.post(
+                `${API_BACKEND_URL}/api/events/paper/user/team/remove`,
+                { userId: memberId },
+                { withCredentials: true }
+            );
+
+            if (response.data.success) {
+                toast.success("Member removed successfully!");
+                fetchTeam();
+            }
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.message || "Failed to remove member";
+            toast.error(errorMessage);
+        }
+    };
+
     if (!isOpen) return null;
 
     const isLeader = team?.createdBy === user?.id;
@@ -155,6 +175,15 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                                                     <p className="text-xs text-gray-500">{member.uniqueId === team.createdBy ? "Team Leader" : "Member"}</p>
                                                 </div>
                                             </div>
+                                            {isLeader && member.uniqueId !== user?.id && (
+                                                <button
+                                                    onClick={() => removeMember(member.uniqueId)}
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Remove Member"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
