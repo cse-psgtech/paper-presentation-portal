@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, UserCheck, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, UserCheck, /* User, */ Eye, EyeOff } from 'lucide-react';
 import { useAuth, type UserRole } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -16,7 +16,7 @@ export default function Auth() {
   const { fetchProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<UserRole>('user');
+  const [userRole, setUserRole] = useState<UserRole>('reviewer');
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -59,7 +59,8 @@ export default function Auth() {
         } else if (response.data.redirect) {
           navigate(response.data.redirect, { replace: true });
         } else {
-          navigate('/author', { replace: true });
+          // navigate('/author', { replace: true });
+          navigate('/reviewer', { replace: true });
         }
       } catch (err) {
         const errorMessage = axios.isAxiosError(err)
@@ -81,9 +82,9 @@ export default function Auth() {
     setError(null);
   };
 
-  const handleGoogleLogin = () => {
+  /* const handleGoogleLogin = () => {
     window.location.href = `${API_BACKEND_URL}/api/auth/user/ppp/google`;
-  };
+  }; */
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +111,8 @@ export default function Auth() {
       if (profileResult?.redirect) {
         navigate(profileResult.redirect, { replace: true });
       } else {
-        navigate(userRole === 'user' ? '/author' : '/reviewer');
+        // navigate(userRole === 'user' ? '/author' : '/reviewer');
+        navigate('/reviewer');
       }
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
@@ -154,7 +156,7 @@ export default function Auth() {
             </button>
 
             {/* Author Tab */}
-            <button
+            {/* <button
               type="button"
               onClick={() => {
                 setUserRole('user');
@@ -167,7 +169,7 @@ export default function Auth() {
             >
               <User className="mr-2" size={20} />
               Author
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -264,7 +266,7 @@ export default function Auth() {
             </button>
 
             {/* Google Login for Authors Only */}
-            {userRole === 'user' && (
+            {/* {userRole === 'user' && (
               <>
                 <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
@@ -301,7 +303,7 @@ export default function Auth() {
                   <span className="text-gray-700">Sign in with Google</span>
                 </button>
               </>
-            )}
+            )} */}
           </form>
         </div>
       </div>
