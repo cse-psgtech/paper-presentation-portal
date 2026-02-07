@@ -26,8 +26,7 @@ export default function ProtectedRoute({ allowedRoles, children }: ProtectedRout
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
-    // const redirectPath = role === 'user' ? '/author' : '/reviewer';
-    const redirectPath = '/reviewer';
+    const redirectPath = role === 'user' ? '/author' : '/reviewer';
     return <Navigate to={redirectPath} replace />;
   }
 

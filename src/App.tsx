@@ -4,8 +4,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Auth from './components/Auth';
 import ReviewerDashboard from './pages/ReviewerDashboard';
-// import AuthorDashboard from './pages/AuthorDashboard';
-// import CreateTeam from './pages/CreateTeam';
+import AuthorDashboard from './pages/AuthorDashboard';
+import CreateTeam from './pages/CreateTeam';
 
 const toastConfig = {
   className: '',
@@ -61,7 +61,7 @@ function AppContent() {
       />
       <Routes>
         {/*<Route path="/auth" element={isAuthenticated ? <Navigate to={user?.role === 'reviewer' ? '/reviewer' : '/author'} /> : <Auth />} />*/}
-        <Route path="/auth" element={isAuthenticated ? <Navigate to={user?.role === 'reviewer' ? '/reviewer' : '/reviewer'} /> : <Auth />} />
+        <Route path="/auth" element={isAuthenticated ? <Navigate to={user?.role === 'reviewer' ? '/reviewer' : '/author'} /> : <Auth />} />
 
         <Route
           path="/reviewer"
@@ -71,7 +71,7 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-        {/* <Route
+        <Route
           path="/author"
           element={
             <ProtectedRoute allowedRoles={['user']}>
@@ -86,7 +86,7 @@ function AppContent() {
               <CreateTeam />
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         <Route path="*" element={<Navigate to="/auth" />} />
       </Routes>
