@@ -192,39 +192,42 @@ export default function FileManager({ role, chatId }: FileManagerProps) {
             {submissions.map((submission) => (
               <div
                 key={submission._id}
-                className="p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden flex flex-col shadow-sm"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div
-                    className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-gray-100 -m-3 p-3 rounded-lg transition"
-                    onClick={() => handleOpenFile(submission.fileUrl)}
-                  >
-                    <div className="p-2 bg-blue-100 text-blue-600 rounded">
-                      <FileText size={18} />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-sm font-medium text-gray-800 truncate">
-                        {submission.filename || 'Paper Submission'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Submitted: {new Date(submission.createdAt).toLocaleString()}
-                      </p>
-                      {submission.accepted && (
-                        <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded">
-                          <CheckCircle2 size={10} /> Accepted
-                        </span>
-                      )}
-                    </div>
+                <div
+                  className="p-3 flex items-start gap-3 cursor-pointer hover:bg-gray-100 transition"
+                  onClick={() => handleOpenFile(submission.fileUrl)}
+                >
+                  <div className="p-2 bg-blue-100 text-blue-600 rounded flex-shrink-0">
+                    <FileText size={18} />
                   </div>
-                  {!submission.accepted && (
-                    <button
-                      onClick={() => handleAcceptClick(submission._id)}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700 transition flex-shrink-0"
-                    >
-                      <CheckCircle2 size={14} /> Accept
-                    </button>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 break-words line-clamp-2">
+                      {submission.filename || 'Paper Submission'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Submitted: {new Date(submission.createdAt).toLocaleString()}
+                    </p>
+                    {submission.accepted && (
+                      <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded">
+                        <CheckCircle2 size={10} /> Accepted
+                      </span>
+                    )}
+                  </div>
                 </div>
+                {!submission.accepted && (
+                  <div className="px-3 pb-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAcceptClick(submission._id);
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition"
+                    >
+                      <CheckCircle2 size={14} /> Accept Submission
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -288,8 +291,8 @@ export default function FileManager({ role, chatId }: FileManagerProps) {
                 <div className="p-1.5 bg-blue-100 text-blue-600 rounded">
                   <FileText size={16} />
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <p className="text-xs font-medium text-gray-700 truncate">{file.name}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-gray-700 break-words line-clamp-2">{file.name}</p>
                 </div>
                 <button
                   onClick={() => setFiles(files.filter((_, i) => i !== index))}
@@ -333,9 +336,9 @@ export default function FileManager({ role, chatId }: FileManagerProps) {
                   <div className="p-2 bg-blue-100 text-blue-600 rounded">
                     <FileText size={16} />
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <p className="text-sm font-medium text-gray-800 truncate">
-                      Paper Submission
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 break-words line-clamp-2">
+                      {submission.filename || 'Paper Submission'}
                     </p>
                     <p className="text-xs text-gray-500">
                       Submitted: {new Date(submission.createdAt).toLocaleString()}
