@@ -417,21 +417,15 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
 
         {/* Input Area */}
         <div className="p-4 bg-white border-t border-gray-200">
-          {selectedChatRoom.status !== 'pending' && (
-            <p className="text-xs text-gray-500 mb-3 text-center">
-              Chat is {selectedChatRoom.status}. No new messages can be sent.
-            </p>
-          )}
           <div className="flex flex-row items-center gap-2">
             <div className="flex-1 relative">
               <textarea
-                className="w-full bg-gray-100 border-0 rounded-lg p-3 pr-12 focus:ring-2 focus:ring-blue-500 resize-none h-12 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder={selectedChatRoom.status === 'pending' ? "Type your message..." : "Chat is closed"}
+                className="w-full bg-gray-100 border-0 rounded-lg p-3 pr-12 focus:ring-2 focus:ring-blue-500 resize-none h-12 text-sm"
+                placeholder="Type your message..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                disabled={selectedChatRoom.status !== 'pending'}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && selectedChatRoom.status === 'pending') {
+                  if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleSend();
                   }
@@ -440,8 +434,7 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
               {/* File Upload Icon */}
               <button
                 onClick={handleFileIconClick}
-                disabled={selectedChatRoom.status !== 'pending'}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-blue-600 transition"
                 title="Attach file"
               >
                 <Paperclip size={20} />
@@ -457,9 +450,9 @@ export default function ChatInterface({ selectedChatRoom, onBackToList }: ChatIn
             {/* Send Button */}
             <button
               onClick={handleSend}
-              disabled={selectedChatRoom.status !== 'pending' || !input.trim()}
+              disabled={!input.trim()}
               className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-              title={selectedChatRoom.status === 'pending' ? 'Send message' : 'Chat is closed'}
+              title="Send message"
             >
               <Send size={24} />
             </button>
