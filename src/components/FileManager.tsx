@@ -26,7 +26,7 @@ interface Submission {
   updatedAt: string;
 }
 
-export default function FileManager({ role, chatId }: FileManagerProps) {
+export default function FileManager({ role, chatId, paperId }: FileManagerProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,24 +80,27 @@ export default function FileManager({ role, chatId }: FileManagerProps) {
 
   const handleSubmit = async () => {
     if (role === 'reviewer') return;
+    /*
+        setIsSubmitting(true);
+        setError(null);
+    
+        // Artificial delay to simulate process
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    
+        const errorMessage = 'could not upload file';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        setIsSubmitting(false);
+    */
 
-    setIsSubmitting(true);
-    setError(null);
-
-    // Artificial delay to simulate process
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const errorMessage = 'could not upload file';
-    setError(errorMessage);
-    toast.error(errorMessage);
-    setIsSubmitting(false);
-
-    /* Commented out original backend request logic
     if (!paperId) {
       setError('Paper ID not found for upload');
       return;
     }
     if (files.length === 0) return;
+
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       for (const file of files) {
@@ -129,7 +132,7 @@ export default function FileManager({ role, chatId }: FileManagerProps) {
     } finally {
       setIsSubmitting(false);
     }
-    */
+
   };
 
   const handleOpenFile = (fileUrl: string) => {
