@@ -7,6 +7,6 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: '/paper',
   server: {
-    allowedHosts: ['csea.psgtech.ac.in']
+    allowedHosts: ['kriya.psgtech.ac.in']
   }
 })
