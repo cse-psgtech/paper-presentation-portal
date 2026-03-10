@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Users, UserPlus, X, Shield, Search, Loader2, FileText, ChevronLeft } from 'lucide-react';
+import { Users, UserPlus, X, Shield, Search, Loader2, FileText, ChevronLeft, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -37,24 +37,48 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
     const [isPapersLoading, setIsPapersLoading] = useState(true);
     const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
 
+    // view: 'manage' | 'create'
+    const [view, setView] = useState<'manage' | 'create'>('manage');
+
     const [team, setTeam] = useState<Team | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    // shared search state (used for both manage-add and create-form)
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<TeamMember[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
 
+    // create-team form state
+    const [newTeamName, setNewTeamName] = useState('');
+    const [newTeamMembers, setNewTeamMembers] = useState<TeamMember[]>([]);
+    const [isCreating, setIsCreating] = useState(false);
+
     useEffect(() => {
         if (isOpen) {
             fetchPapers();
         } else {
-            // reset on close
-            setSelectedPaper(null);
-            setTeam(null);
-            setSearchQuery('');
-            setSearchResults([]);
+            resetAll();
         }
     }, [isOpen]);
+
+    const resetAll = () => {
+        setSelectedPaper(null);
+        setTeam(null);
+        setView('manage');
+        setSearchQuery('');
+        setSearchResults([]);
+        setNewTeamName('');
+        setNewTeamMembers([]);
+    };
+
+    const resetToManage = () => {
+        setView('manage');
+        setSearchQuery('');
+        setSearchResults([]);
+        setNewTeamName('');
+        setNewTeamMembers([]);
+    };
 
     const fetchPapers = async () => {
         setIsPapersLoading(true);
@@ -73,8 +97,13 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
         }
     };
 
-    const handleSelectPaper = (paper: Paper) => {
+    const handleSelectPaper = async (paper: Paper) => {
         setSelectedPaper(paper);
+        setView('manage');
+        setSearchQuery('');
+        setSearchResults([]);
+        setNewTeamName('');
+        setNewTeamMembers([]);
         fetchTeam(paper.paperId);
     };
 
@@ -86,12 +115,12 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                 setSearchResults([]);
             }
         }, 500);
-
         return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery]);
+    }, [searchQuery, selectedPaper]);
 
     const fetchTeam = async (paperId: string) => {
         setIsLoading(true);
+        setTeam(null);
         try {
             const response = await axios.get(
                 `${API_BACKEND_URL}/api/events/paper/${paperId}/user/my-team`,
@@ -112,7 +141,7 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
         setIsSearching(true);
         try {
             const response = await axios.get(
-                `${API_BACKEND_URL}/api/events/paper/${selectedPaper.paperId}/user/team?search=${searchQuery}`,
+                `${API_BACKEND_URL}/api/events/paper/${selectedPaper.paperId}/user/team?search=${encodeURIComponent(searchQuery)}`,
                 { withCredentials: true }
             );
             if (response.data.success) {
@@ -125,6 +154,7 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
         }
     };
 
+    // ── MANAGE: add member to existing team ──
     const addMember = async (member: TeamMember) => {
         if (!selectedPaper) return;
         setIsAdding(true);
@@ -134,7 +164,6 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                 { userId: member.uniqueId },
                 { withCredentials: true }
             );
-
             if (response.data.success) {
                 toast.success("Member added successfully!");
                 setSearchQuery('');
@@ -142,8 +171,7 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                 fetchTeam(selectedPaper.paperId);
             }
         } catch (err: any) {
-            const errorMessage = err.response?.data?.message || "Failed to add member";
-            toast.error(errorMessage);
+            toast.error(err.response?.data?.message || "Failed to add member");
         } finally {
             setIsAdding(false);
         }
@@ -152,21 +180,66 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
     const removeMember = async (memberId: string) => {
         if (!selectedPaper) return;
         if (!window.confirm("Are you sure you want to remove this member?")) return;
-
         try {
             const response = await axios.post(
                 `${API_BACKEND_URL}/api/events/paper/${selectedPaper.paperId}/user/team/remove`,
                 { userId: memberId },
                 { withCredentials: true }
             );
-
             if (response.data.success) {
                 toast.success("Member removed successfully!");
                 fetchTeam(selectedPaper.paperId);
             }
         } catch (err: any) {
-            const errorMessage = err.response?.data?.message || "Failed to remove member";
-            toast.error(errorMessage);
+            toast.error(err.response?.data?.message || "Failed to remove member");
+        }
+    };
+
+    // ── CREATE: local add/remove before submit ──
+    const addNewTeamMember = (member: TeamMember) => {
+        if (newTeamMembers.some(m => m.uniqueId === member.uniqueId)) {
+            toast.error("Member already added");
+            return;
+        }
+        if (newTeamMembers.length >= 3) {
+            toast.error("Maximum 4 members per team (including you)");
+            return;
+        }
+        setNewTeamMembers(prev => [...prev, member]);
+        setSearchQuery('');
+        setSearchResults([]);
+    };
+
+    const removeNewTeamMember = (uniqueId: string) => {
+        setNewTeamMembers(prev => prev.filter(m => m.uniqueId !== uniqueId));
+    };
+
+    const handleCreateTeam = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedPaper) return;
+        if (!newTeamName.trim()) { toast.error("Team name is required"); return; }
+
+        setIsCreating(true);
+        try {
+            const response = await axios.post(
+                `${API_BACKEND_URL}/api/events/paper/${selectedPaper.paperId}/user/team`,
+                {
+                    teamName: newTeamName,
+                    teamMembers: newTeamMembers.map(m => m.uniqueId)
+                },
+                { withCredentials: true }
+            );
+            if (response.data.success) {
+                toast.success("Team created successfully!");
+                resetToManage();
+                fetchTeam(selectedPaper.paperId);
+            } else {
+                toast.error(response.data.message || "Failed to create team");
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to create team");
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -174,32 +247,41 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
 
     const isLeader = team?.createdBy === user?.id;
 
+    /* ─── header title logic ─── */
+    const headerTitle = !selectedPaper
+        ? 'Select a Paper'
+        : view === 'create'
+            ? 'Create Team'
+            : 'Manage Team';
+    const HeaderIcon = !selectedPaper ? FileText : Users;
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-gray-100">
 
                 {/* Modal Header */}
                 <div className="bg-blue-600 px-6 py-4 flex items-center justify-between text-white">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        {/* back button: from create → manage, from manage → paper list */}
                         {selectedPaper && (
                             <button
                                 onClick={() => {
-                                    setSelectedPaper(null);
-                                    setTeam(null);
-                                    setSearchQuery('');
-                                    setSearchResults([]);
+                                    if (view === 'create') {
+                                        resetToManage();
+                                    } else {
+                                        setSelectedPaper(null);
+                                        setTeam(null);
+                                    }
                                 }}
                                 className="hover:bg-blue-700 p-1 rounded-full transition-colors mr-1"
-                                title="Back to paper selection"
+                                title="Back"
                             >
                                 <ChevronLeft size={20} />
                             </button>
                         )}
-                        {selectedPaper ? <Users size={24} /> : <FileText size={24} />}
-                        <div>
-                            <h2 className="text-xl font-bold">
-                                {selectedPaper ? 'Manage Team' : 'Select a Paper'}
-                            </h2>
+                        <HeaderIcon size={22} />
+                        <div className="ml-2">
+                            <h2 className="text-xl font-bold leading-tight">{headerTitle}</h2>
                             {selectedPaper && (
                                 <p className="text-blue-200 text-xs">{selectedPaper.eventName}</p>
                             )}
@@ -210,7 +292,7 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                     </button>
                 </div>
 
-                <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
 
                     {/* ── PAPER SELECTION ── */}
                     {!selectedPaper && (
@@ -246,8 +328,8 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                         )
                     )}
 
-                    {/* ── TEAM MANAGEMENT ── */}
-                    {selectedPaper && (
+                    {/* ── TEAM MANAGEMENT (existing team) ── */}
+                    {selectedPaper && view === 'manage' && (
                         isLoading ? (
                             <div className="flex flex-col items-center justify-center py-12">
                                 <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
@@ -258,32 +340,34 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                                 <div className="space-y-1">
                                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Team Name</label>
                                     <div className="flex items-center gap-2 text-xl font-bold text-gray-900">
-                                        <Shield className="text-blue-600" size={24} />
+                                        <Shield className="text-blue-600" size={22} />
                                         {team.teamName}
                                     </div>
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Team Members ({team.members.length}/4)</label>
+                                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Members ({team.members.length}/4)
+                                    </label>
                                     <div className="grid gap-2">
                                         {team.members.map((member) => (
                                             <div key={member.uniqueId} className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                                    <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
                                                         {member.name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{member.name}</p>
-                                                        <p className="text-xs text-gray-500">{member.uniqueId === team.createdBy ? "Team Leader" : "Member"}</p>
+                                                        <p className="font-medium text-gray-900 text-sm">{member.name}</p>
+                                                        <p className="text-xs text-gray-400">{member.uniqueId === team.createdBy ? "Team Leader" : "Member"}</p>
                                                     </div>
                                                 </div>
                                                 {isLeader && member.uniqueId !== user?.id && (
                                                     <button
                                                         onClick={() => removeMember(member.uniqueId)}
-                                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         title="Remove Member"
                                                     >
-                                                        <X size={18} />
+                                                        <X size={16} />
                                                     </button>
                                                 )}
                                             </div>
@@ -292,38 +376,37 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                                 </div>
 
                                 {isLeader && team.members.length < 4 && (
-                                    <div className="space-y-3 pt-4 border-t border-gray-100">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-blue-600">Add New Member</label>
+                                    <div className="space-y-3 pt-2 border-t border-gray-100">
+                                        <label className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Add Member</label>
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                             <input
                                                 type="text"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                                placeholder="Search by name..."
-                                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                placeholder="Search by ID or name..."
+                                                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                             />
                                             {isSearching && (
                                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                    <Loader2 className="animate-spin text-blue-600" size={18} />
+                                                    <Loader2 className="animate-spin text-blue-600" size={16} />
                                                 </div>
                                             )}
                                         </div>
-
                                         {searchResults.length > 0 && (
-                                            <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+                                            <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto">
                                                 {searchResults.map((result) => (
                                                     <button
                                                         key={result.uniqueId}
                                                         onClick={() => addMember(result)}
                                                         disabled={isAdding}
-                                                        className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors flex items-center justify-between group"
+                                                        className="w-full px-4 py-2.5 text-left hover:bg-blue-50 transition-colors flex items-center justify-between group text-sm"
                                                     >
                                                         <div>
                                                             <p className="font-medium text-gray-900">{result.name}</p>
-                                                            <p className="text-xs text-gray-500">ID: {result.uniqueId}</p>
+                                                            <p className="text-xs text-gray-400">ID: {result.uniqueId}</p>
                                                         </div>
-                                                        <UserPlus className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" size={18} />
+                                                        <UserPlus className="text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" size={16} />
                                                     </button>
                                                 ))}
                                             </div>
@@ -332,20 +415,164 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
                                 )}
 
                                 {!isLeader && (
-                                    <p className="text-xs text-gray-500 italic bg-gray-50 p-3 rounded-lg border border-dashed border-gray-200">
-                                        Only the team leader ({team.members.find(m => m.uniqueId === team.createdBy)?.name}) can add new members.
+                                    <p className="text-xs text-gray-400 italic bg-gray-50 p-3 rounded-lg border border-dashed border-gray-200">
+                                        Only the team leader ({team.members.find(m => m.uniqueId === team.createdBy)?.name}) can add or remove members.
                                     </p>
                                 )}
                             </>
                         ) : (
-                            <div className="text-center py-12">
-                                <Users className="mx-auto mb-4 text-gray-300" size={40} />
-                                <p className="text-gray-500">No team found for this paper.</p>
+                            /* No team found — prompt to create */
+                            <div className="text-center py-8 space-y-4">
+                                <div className="flex flex-col items-center gap-2">
+                                    <Users className="text-gray-300" size={44} />
+                                    <p className="text-gray-500 font-medium">No team found for this paper.</p>
+                                    <p className="text-xs text-gray-400">You haven't formed a team yet.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setView('create')}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+                                >
+                                    <UserPlus size={16} />
+                                    Form a Team
+                                </button>
                             </div>
                         )
+                    )}
+
+                    {/* ── CREATE TEAM FORM ── */}
+                    {selectedPaper && view === 'create' && (
+                        <form onSubmit={handleCreateTeam} className="space-y-5">
+                            {/* Team Name */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Team Name</label>
+                                <div className="relative">
+                                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                    <input
+                                        type="text"
+                                        value={newTeamName}
+                                        onChange={(e) => setNewTeamName(e.target.value)}
+                                        placeholder="Enter a team name"
+                                        className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Added Members */}
+                            {newTeamMembers.length > 0 && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Added Members ({newTeamMembers.length})
+                                    </label>
+                                    <div className="grid gap-2">
+                                        {newTeamMembers.map((member) => (
+                                            <div key={member.uniqueId} className="flex items-center justify-between bg-blue-50 border border-blue-100 p-3 rounded-xl">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center font-bold text-xs">
+                                                        {member.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-gray-900 text-sm">{member.name}</p>
+                                                        <p className="text-xs text-gray-400">ID: {member.uniqueId}</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeNewTeamMember(member.uniqueId)}
+                                                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                >
+                                                    <X size={15} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Search to add members */}
+                            {newTeamMembers.length < 3 && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Add Members</label>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search by ID or name..."
+                                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        />
+                                        {isSearching && (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                <Loader2 className="animate-spin text-blue-600" size={16} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    {searchResults.length > 0 && (
+                                        <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto">
+                                            {searchResults
+                                                .filter(r => !newTeamMembers.some(m => m.uniqueId === r.uniqueId))
+                                                .map((result) => (
+                                                    <button
+                                                        key={result.uniqueId}
+                                                        type="button"
+                                                        onClick={() => addNewTeamMember(result)}
+                                                        className="w-full px-4 py-2.5 text-left hover:bg-blue-50 transition-colors flex items-center justify-between group text-sm"
+                                                    >
+                                                        <div>
+                                                            <p className="font-medium text-gray-900">{result.name}</p>
+                                                            <p className="text-xs text-gray-400">ID: {result.uniqueId}</p>
+                                                        </div>
+                                                        <UserPlus className="text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" size={16} />
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <p className="text-xs text-gray-400 italic">
+                                * Up to 4 members including yourself. Members must be registered for this paper.
+                            </p>
+
+                            <button
+                                type="submit"
+                                disabled={isCreating}
+                                className="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all font-semibold text-sm shadow-md shadow-blue-100 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isCreating ? (
+                                    <Loader2 className="animate-spin" size={18} />
+                                ) : (
+                                    <>
+                                        Create Team
+                                        <ArrowRight size={16} />
+                                    </>
+                                )}
+                            </button>
+                        </form>
                     )}
                 </div>
             </div>
         </div>
     );
+}
+
+
+interface Paper {
+    paperId: string;
+    eventName: string;
+}
+
+interface TeamMember {
+    uniqueId: string;
+    name: string;
+}
+
+interface Team {
+    _id: string;
+    teamName: string;
+    userIds: string[];
+    createdBy: string;
+    members: TeamMember[];
 }
