@@ -97,27 +97,38 @@ export default function ChatRoomsList({
                 className={`px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 ${selectedChatRoomId === chatRoom._id ? 'bg-gray-100 border-l-4 border-blue-600' : ''
                   }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">
-                      {user?.role === 'reviewer' ? (chatRoom.teamName || chatRoom.userName || 'Individual Submitter') : chatRoom.paperId}
-                    </h3>
-                    <p className="text-sm text-gray-600 truncate">
-                      {chatRoom.paperName}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {chatRoom.theme}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${chatRoom.status === 'completed' ? 'bg-green-100 text-green-800' :
+                {user?.role === 'reviewer' ? (
+                  /* Reviewer: show submitter name + paper name + status */
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">
+                        {chatRoom.teamName || chatRoom.userName || 'Individual Submitter'}
+                      </h3>
+                      <p className="text-sm text-gray-600 truncate">{chatRoom.paperName}</p>
+                      <p className="text-xs text-gray-500 mt-1">{chatRoom.theme}</p>
+                    </div>
+                    <span className={`inline-flex shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium ${chatRoom.status === 'completed' ? 'bg-green-100 text-green-800' :
                       chatRoom.status === 'declined' ? 'bg-red-100 text-red-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
                       {chatRoom.status}
                     </span>
                   </div>
-                </div>
+                ) : (
+                  /* Author: paper name as title, status + theme as two small details */
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">{chatRoom.paperName}</h3>
+                      <p className="text-xs text-gray-500 mt-1 truncate">{chatRoom.theme}</p>
+                    </div>
+                    <span className={`inline-flex shrink-0 mt-0.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${chatRoom.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      chatRoom.status === 'declined' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                      {chatRoom.status}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
