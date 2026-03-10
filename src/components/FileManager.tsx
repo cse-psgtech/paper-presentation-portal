@@ -26,7 +26,7 @@ interface Submission {
   updatedAt: string;
 }
 
-export default function FileManager({ role, chatId, paperId }: FileManagerProps) {
+export default function FileManager({ role, chatId }: FileManagerProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
