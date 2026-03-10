@@ -93,8 +93,8 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
         setIsSubmitting(false);
     */
 
-    if (!paperId) {
-      setError('Paper ID not found for upload');
+    if (!chatId) {
+      setError('Chat ID not found for upload');
       return;
     }
     if (files.length === 0) return;
@@ -109,7 +109,7 @@ export default function FileManager({ role, chatId, paperId }: FileManagerProps)
         formData.append('description', 'paper_upload');
 
         const response = await axios.post(
-          `${API_BASE_URL}/api/events/paper/${paperId}/upload`,
+          `${API_BASE_URL}/api/events/paper/user/chats/${chatId}/upload`,
           formData
         );
 

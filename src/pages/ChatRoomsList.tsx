@@ -126,16 +126,17 @@ export default function ChatRoomsList({
                   }`}
               >
                 {user?.role === 'reviewer' ? (
-                  /* Reviewer: show submitter name + paper name + status */
+                  /* Reviewer: paper name + team name + status only */
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
-                        {chatRoom.teamName || chatRoom.userName || 'Individual Submitter'}
-                      </h3>
-                      <p className="text-sm text-gray-600 truncate">{chatRoom.paperName}</p>
-                      <p className="text-xs text-gray-500 mt-1">{chatRoom.theme}</p>
+                      <h3 className="font-medium text-gray-900 truncate">{chatRoom.paperName}</h3>
+                      {(chatRoom.teamName || chatRoom.userName) && (
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">
+                          {chatRoom.teamName || chatRoom.userName}
+                        </p>
+                      )}
                     </div>
-                    <span className={`inline-flex shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium ${chatRoom.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    <span className={`inline-flex shrink-0 mt-0.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${chatRoom.status === 'completed' ? 'bg-green-100 text-green-800' :
                       chatRoom.status === 'declined' ? 'bg-red-100 text-red-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
