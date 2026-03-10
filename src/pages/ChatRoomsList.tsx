@@ -1,4 +1,4 @@
-import { MessageSquare, Search, Users } from 'lucide-react';
+import { Clock, Search, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { type ChatRoom } from '../types/chat';
@@ -84,10 +84,38 @@ export default function ChatRoomsList({
       {/* Chat Rooms List */}
       <div className="flex-1 overflow-y-auto">
         {filteredChatRooms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full">
-            <MessageSquare className="h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-gray-500">No papers found</p>
-          </div>
+          user?.role === 'user' ? (
+            /* Author empty state — two possible reasons */
+            <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-6">
+              <div className="space-y-3">
+                <div className="flex flex-col items-center gap-2">
+                  <Users className="h-10 w-10 text-blue-300" />
+                  <p className="font-semibold text-gray-700">No paper chats yet</p>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Haven't formed a team? Click below to get started.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsTeamModalOpen(true)}
+                  className="flex items-center gap-2 mx-auto px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <Users size={15} />
+                  Form / Manage Team
+                </button>
+              </div>
+              <div className="w-full border-t border-dashed border-gray-200 pt-4 space-y-1">
+                <Clock className="h-6 w-6 text-gray-300 mx-auto" />
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Already have a team? A chat room will appear once a reviewer is assigned to your team.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <Users className="h-12 w-12 text-gray-400 mb-4" />
+              <p className="text-gray-500">No papers found</p>
+            </div>
+          )
         ) : (
           <div className="divide-y divide-gray-100">
             {filteredChatRooms.map((chatRoom) => (

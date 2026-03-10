@@ -140,8 +140,12 @@ export default function ManageTeamModal({ isOpen, onClose }: ManageTeamModalProp
         if (!selectedPaper) return;
         setIsSearching(true);
         try {
+            // Normalise query: uppercase it; if pure digits, prepend KRIYA so
+            // IDs like KRIYA1001 are matched when user types "kriya1001" or "1001"
+            const raw = searchQuery.trim();
+            const normalised = /^\d+$/.test(raw) ? `KRIYA${raw}` : raw.toUpperCase();
             const response = await axios.get(
-                `${API_BACKEND_URL}/api/events/paper/${selectedPaper.paperId}/user/team?search=${encodeURIComponent(searchQuery)}`,
+                `${API_BACKEND_URL}/api/events/paper/${selectedPaper.paperId}/user/team?search=${encodeURIComponent(normalised)}`,
                 { withCredentials: true }
             );
             if (response.data.success) {
